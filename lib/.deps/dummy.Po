@@ -1,0 +1,7 @@
+lib/dummy.o: lib/dummy.c /usr/include/stdc-predef.h config.h lib/dummy.h
+
+/usr/include/stdc-predef.h:
+
+config.h:
+
+lib/dummy.h:

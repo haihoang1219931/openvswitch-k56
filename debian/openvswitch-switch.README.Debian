@@ -1,0 +1,12 @@
+README.Debian for openvswitch-switch
+---------------------------------
+
+* To use the Linux kernel-based switch implementation, you will need
+  to build and install the Open vSwitch kernel module.  To do so, install
+  the openvswitch-datapath-source package, then follow the instructions
+  given in /usr/share/doc/openvswitch-datapath-source/README.Debian
+
+* This package does not yet support the userspace datapath-based
+  switch implementation.
+
+ -- Ben Pfaff <blp@nicira.com>, Mon,  9 Jul 2012 09:41:00 -0700
