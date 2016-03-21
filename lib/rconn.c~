@@ -1126,6 +1126,10 @@ copy_to_monitor(struct rconn *rc, const struct ofpbuf *b)
     size_t i;
     printf("HNH received rconn_recv here=========================\r\n");
     printf("HNH b->size: %d\r\n",b->size);
+    struct ofp_header *oh = b->data;
+    uint8_t type = oh->type;
+    //printf("HNH type: %d\r\n",type);
+    getOFP_TYPE(type);
     dump((const unsigned char *)b->data,0,b->size);
     for (i = 0; i < rc->n_monitors; i++) {
         struct vconn *vconn = rc->monitors[i];

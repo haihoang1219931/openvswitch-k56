@@ -99,6 +99,65 @@ void dump(const unsigned char *buffer,int start,int finish){
     }
 
 }
+struct ofp_vendor_bandwidth{
+    struct ofp_header header;
+    ovs_be32 vendor;
+    uint8_t type;
+    uint8_t port_id;
+    uint16_t queue_id;
+    uint32_t min_rate;
+    uint32_t max_rate;
+};
+//size = 24
+
+struct ofp_vendor_port_modify{
+    struct ofp_header header;
+    ovs_be32 vendor;
+    uint8_t type;
+    uint8_t port_id;
+    uint16_t queue_id;
+    uint8_t status;
+};
+//size = 17
+
+void handle_bandwidth(struct ofp_vendor_bandwidth * vendor_bandwitdh){
+    printf("vendor_bandwitdh %04x %d bytes\r\n",vendor_bandwitdh->header.length,vendor_bandwitdh->header.length);
+    getOFP_TYPE(vendor_bandwitdh->header.type);
+    printf("type: %02x\r\n",vendor_bandwitdh->type);
+    printf("port_id: %02x\r\n",vendor_bandwitdh->port_id);
+    printf("queue_id: %d %04x\r\n",ntohs(vendor_bandwitdh->queue_id),htons(vendor_bandwitdh->queue_id));
+    printf("min_rate: %d %08x\r\n",htonl(vendor_bandwitdh->min_rate),htonl(vendor_bandwitdh->min_rate));
+    printf("max_rate: %d %08x\r\n",htonl(vendor_bandwitdh->max_rate),htonl(vendor_bandwitdh->max_rate));
+     // dump()
+}
+void handle_port_status(unsigned char *buffer){
+
+}
+void handle_port_modify(struct ofp_vendor_port_modify * port_modify){
+    printf("vendor_port_modify %04x %d bytes\r\n",port_modify->header.length,port_modify->header.length);
+    printf("type: %02x\r\n",port_modify->type);
+    printf("port_id: %02x\r\n",port_modify->port_id);
+    printf("queue_id: %04x\r\n",htons(port_modify->queue_id));
+    printf("status: %02x\r\n",port_modify->status);
+}
+void handle_vendor(unsigned char *buffer){
+    struct ofp_header *oh = (struct ofp_header *)buffer;
+    if(oh->type == 0x0c){
+        printf("vendor_bandwidth[12] =  %d %d %d\r\n",buffer[11],buffer[12],buffer[13]);
+        switch(buffer[12]){
+            case 0x00:
+                printf("bandwidth\r\n");
+                struct ofp_vendor_bandwidth * bandwitdh = (struct ofp_vendor_bandwidth *)buffer; 
+                handle_bandwidth(bandwitdh); 
+                break;
+            case 0x02:
+                printf("modify port\r\n"); 
+                struct ofp_vendor_port_modify * port_modify = (struct ofp_vendor_port_modify*)buffer; 
+                handle_port_modify(port_modify); 
+                break;
+            }
+    }
+}
 VLOG_DEFINE_THIS_MODULE(rconn);
 
 COVERAGE_DEFINE(rconn_discarded);
@@ -1118,19 +1177,18 @@ state_transition(struct rconn *rc, enum state state)
     rc->state_entered = time_now();
 }
 
+
 static void
 copy_to_monitor(struct rconn *rc, const struct ofpbuf *b)
 {
     struct ofpbuf *clone = NULL;
     int retval;
     size_t i;
-    printf("HNH received rconn_recv here=========================\r\n");
     printf("HNH b->size: %d\r\n",b->size);
     struct ofp_header *oh = b->data;
     uint8_t type = oh->type;
     //printf("HNH type: %d\r\n",type);
-    getOFP_TYPE(type);
-    dump((const unsigned char *)b->data,0,b->size);
+    
     for (i = 0; i < rc->n_monitors; i++) {
         struct vconn *vconn = rc->monitors[i];
 
@@ -1166,6 +1224,8 @@ is_admitted_msg(const struct ofpbuf *b)
     uint8_t type = oh->type;
     //printf("HNH type: %d\r\n",type);
     //getOFP_TYPE(type);
+    getOFP_TYPE(type);
+    dump((const unsigned char *)b->data,0,b->size);
     return !(type < 32
              && (1u << type) & ((1u << OFPT_HELLO) |
                                 (1u << OFPT_ERROR) |
